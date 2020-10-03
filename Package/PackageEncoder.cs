@@ -2,6 +2,7 @@
 using Package.DTO;
 using Package.Enum;
 using Package.Models;
+using Package.Parsers;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -37,21 +38,7 @@ namespace Package {
 
         private static byte[] ParsePropertyInfo(PropertyInfo propertyInfo, Y model, int length) {
             byte[] bytes = new byte[length];
-
-            switch (propertyInfo.PropertyType) {
-                case var type when (type == typeof(DateTime)):
-                    DateTime val_dt = (DateTime)propertyInfo.GetValue(model);
-                    bytes = BitConverter.GetBytes(val_dt.ToBinary());
-                    break;
-                case var type when (type == typeof(string)):
-                    string val_str = (string)propertyInfo.GetValue(model);
-                    bytes = UTF8Encoding.ASCII.GetBytes(val_str);
-                    break;
-                case var type when (type == typeof(MessageTypeEnum)):
-                    MessageTypeEnum enum_val = (MessageTypeEnum)propertyInfo.GetValue(model);
-                    bytes = new byte[] { (byte)enum_val };
-                    break;
-            }
+            var assem = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IParser<>)));
 
             if (bytes.Length != length) {
                 throw new ArgumentException(string.Format("Something went wrong with the parsing of attribute {0}",propertyInfo.Name));
